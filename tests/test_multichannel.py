@@ -8,6 +8,7 @@ def make_grid(nx=101, ny=101, spacing=1.0):
     xv, yv = np.meshgrid(x, y)
     return x, y, xv, yv
 
+
 def gaussian_2D(xx,yy,sigma,x0,y0):
     return np.exp(-((xx-x0)**2 + (yy-y0)**2)/2/sigma**2)
 
@@ -18,6 +19,7 @@ def get_calibration(a,b,c):
     ODs = cal._forward(doses, a, b, c)
     cal.fit(doses, ODs)
     return cal
+
 
 def test_pure_dose_signal():
     x, y, xx, yy = make_grid()
@@ -107,8 +109,6 @@ def test_speed(benchmark):
     b = -np.array([0.2, 0.4, 0.5])
     a = abs(b)*4+0.78
     c = np.array([0.2, 0.6, 0.2])
-
-
     cal_1 = get_calibration(a[0],b[0],c[0])
     OD_1 = disturbance*cal_1.forward(z)
     cal_2 = get_calibration(a[1],b[1],c[1])
@@ -117,8 +117,6 @@ def test_speed(benchmark):
     OD_3 = disturbance*cal_3.forward(z)
 
     measured = np.stack((OD_1, OD_2, OD_3), axis=2)
-
-    
     dose, delta, od = apply_calibration(measured, cal_1, cal_2, cal_3)
     
     def run_metric():

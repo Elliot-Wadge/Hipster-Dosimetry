@@ -25,7 +25,6 @@ class Calibration(ABC):
         return self.inverse(optical_density)
 
 
-
 @njit
 def numba_forward(Dose, a:float, b:float, c:float) -> float|npt.NDArray[np.float64]:
     return -np.log10((a+b*Dose)/(c+Dose))

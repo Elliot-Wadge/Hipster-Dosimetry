@@ -11,6 +11,7 @@ def get_calibration(a,b,c):
     cal.fit(doses, ODs)
     return cal
 
+
 def test_initialization():
     cal = RationalCalibration()
     with pytest.raises(ValueError):
@@ -41,7 +42,7 @@ def test_fit():
     ODs = cal._forward(doses, a, b, c)
     cal.fit(doses, ODs, p0=[0.5,-0.1,0.1])
     # check that the fit is accurate
-    assert np.all(np.isclose([a,b,c], [cal.a,cal.b,cal.c], atol=1e-4, rtol=1e-4))
+    assert np.all(np.isclose(np.array([a,b,c]), np.array([cal.a,cal.b,cal.c]), atol=1e-4, rtol=1e-4))
     # check the fit parameters are properly updated and called in the calibration
     calc_doses = cal.inverse(ODs)
     assert np.all(np.isclose(doses, calc_doses, atol=1e-4, rtol=1e-4))
@@ -83,6 +84,7 @@ def test_derivatives():
     gradient2 = np.gradient(dscores, disturbances[1]-disturbances[0])
     assert np.all(np.isclose(gradient1[1:-1], dscores[1:-1], atol=1e-3))
     assert np.all(np.isclose(gradient2[1:-1], ddscores[1:-1], atol=1e-3))
+
 
 if __name__ == '__main__':
     test_derivatives()

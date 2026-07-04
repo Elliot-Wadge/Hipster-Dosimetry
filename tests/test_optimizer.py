@@ -3,6 +3,7 @@ from HipsterDosimetry.optimizer import newton_raphson
 import numpy as np
 from numba import njit
 
+
 def get_calibration(a,b,c):
     cal = RationalCalibration()
     doses = np.array([0,1,2,3,4])
@@ -17,12 +18,12 @@ def make_do(OD, a, b, c):
         return objective_derivative(x, OD, a, b, c)
     return f
 
+
 def make_ddo(OD, a, b, c):
     @njit
     def f(x):
         return objective_second_derivative(x, OD, a, b, c)
     return f
-
 
 
 def test_root_find():
@@ -44,6 +45,7 @@ def test_root_find():
         ODs = np.array([OD_1, OD_2, OD_3])
         x = newton_raphson(1, ODs, a, b, c, 1e-8, np.array([0.3, 2]))
         assert np.isclose(1/disturbance, x, atol=1e-8)
+
 
 def test_root_find_speed(benchmark):
     b = np.array([0.2, 0.4, 0.5])
@@ -70,6 +72,7 @@ def test_root_find_speed(benchmark):
         newton_raphson(1, ODs, a, b, c, 1e-8, np.array([0.5, 1.5]))
 
     benchmark(run)
+
 
 if __name__ == '__main__':
     test_root_find()
