@@ -102,7 +102,7 @@ def test_disturbed2_dose_signal():
 
 
 def test_speed(benchmark):
-    x, y, xx, yy = make_grid()
+    x, y, xx, yy = make_grid(nx=1024, ny=1024)
     z = gaussian_2D(xx, yy, 10, 0, 0)*3+1
     
     disturbance = 0.85
