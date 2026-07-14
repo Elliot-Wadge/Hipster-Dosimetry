@@ -1,9 +1,9 @@
 from numba import njit
 import numpy as np
-from .calibration import objective_derivative, objective_second_derivative
+from .calibration import objective_derivative, objective_second_derivative, objective
 
 
-@njit
+@njit(cache=True)
 def newton_raphson(x0, ODs, a, b, c, tol, bound, max_iter=100):
     '''newton raphson plus bisection method to better gaurantee convergence'''
     score = objective_derivative(x0, ODs, a, b, c)
@@ -15,8 +15,11 @@ def newton_raphson(x0, ODs, a, b, c, tol, bound, max_iter=100):
     else:
         bracketed = False
 
-    while abs(score) > tol and iterations < max_iter:
-
+    converged = True
+    while abs(score) > tol:
+        if iterations >= max_iter:
+            converged = False
+            break
         dfx = objective_second_derivative(x, ODs, a, b, c)
         # if the derivative is too small don't use newton method,
         if dfx < 1e-15:
@@ -60,4 +63,11 @@ def newton_raphson(x0, ODs, a, b, c, tol, bound, max_iter=100):
         score = new_score
         iterations += 1
 
+    if not converged:
+        score0 = objective(ODs*bound[0], a, b, c)
+        score1 = objective(ODs*bound[1], a, b, c)
+        if score0 < score1:
+            x = bound[0]
+        else:
+            x = bound[1]
     return x
