@@ -32,7 +32,7 @@ def combine_tif_images(dir:str):
         print(matches)
         images = np.array([ski.io.imread(str(match)) for match in matches])
         print(images.shape)
-        combined_image = np.mean(images, axis=0)
+        combined_image = np.mean(images, axis=0).astype(np.uint16)
         print(combined_image.shape)
         ski.io.imsave(save_path / Path(f'{base_name}_combined.tif'), combined_image)
 
