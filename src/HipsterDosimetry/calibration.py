@@ -25,37 +25,37 @@ class Calibration(ABC):
         return self.inverse(optical_density)
 
 
-@njit
+@njit(cache=True)
 def numba_forward(Dose, a:float, b:float, c:float) -> float|npt.NDArray[np.float64]:
     return -np.log10((a+b*Dose)/(c+Dose))
 
 
-@njit
+@njit(cache=True)
 def numba_inverse(optical_density:float|npt.NDArray, a:float|npt.NDArray, b:float|npt.NDArray, c:float|npt.NDArray) -> float|npt.NDArray[np.float64]:
     return (c*10**(-optical_density)-a)/(b-10**(-optical_density))
 
 
-@njit
+@njit(cache=True)
 def first_derivative_inverse(distortion:float, optical_density:float|npt.NDArray, a:float|npt.NDArray, b:float|npt.NDArray, c:float|npt.NDArray):
     opt_d = optical_density*distortion
     t = 10.0**(-opt_d)
     return t*np.log(10)*optical_density*(a-c*b)/(b-t)**2
 
 
-@njit
+@njit(cache=True)
 def second_derivative_inverse(distortion:float, optical_density:float|npt.NDArray, a:float|npt.NDArray, b:float|npt.NDArray, c:float|npt.NDArray):
     opt_d = optical_density*distortion
     t = 10.0**(-opt_d)
     return np.log(10)**2 * optical_density**2 * (c*b-a) * t * (b+t) / (b-t)**3
 
 
-@njit
+@njit(cache=True)
 def objective(optical_density:npt.NDArray, a, b, c):
     Doses = numba_inverse(optical_density, a, b, c)
     return (Doses[0] - Doses[1])**2 + (Doses[0] - Doses[2])**2 + (Doses[2] - Doses[1])**2
 
 
-@njit
+@njit(cache=True)
 def objective_derivative(distortion:float, optical_density:npt.NDArray, a:npt.NDArray, b:npt.NDArray, c:npt.NDArray) -> float:
     Doses = numba_inverse(distortion*optical_density, a, b, c)
     derivatives = first_derivative_inverse(distortion, optical_density, a, b, c)
@@ -63,7 +63,7 @@ def objective_derivative(distortion:float, optical_density:npt.NDArray, a:npt.ND
     return res
 
 
-@njit
+@njit(cache=True)
 def objective_second_derivative(distortion:float, optical_density:npt.NDArray, a:npt.NDArray, b:npt.NDArray, c:npt.NDArray) -> float:
     Doses = numba_inverse(distortion*optical_density, a, b, c)
     first_derivatives = first_derivative_inverse(distortion, optical_density, a, b, c)
