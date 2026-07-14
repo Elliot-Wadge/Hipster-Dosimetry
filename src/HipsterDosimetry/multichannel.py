@@ -3,7 +3,7 @@ import numpy as np
 from .calibration import Calibration, objective_derivative, objective_second_derivative
 from scipy.optimize import minimize_scalar, differential_evolution, dual_annealing, shgo
 from .optimizer import newton_raphson
-from numba import njit
+from numba import njit, prange
 import time
 
 def make_dobj(OD, a, b, c):
@@ -19,7 +19,7 @@ def make_ddobj(OD, a, b, c):
     return f
 
 
-
+@njit
 def objective_function(delta:float, optical_densities:npt.NDArray[np.float64], calibrations:tuple[Calibration]):
     s = 0
     indexing = [[0,1],[1,2],[0,2]]
@@ -30,6 +30,19 @@ def objective_function(delta:float, optical_densities:npt.NDArray[np.float64], c
         od2 = optical_densities[pair[1]]
         s += (calibration1(delta*od1) - calibration2(delta*od2))**2
     return s
+
+@njit(parallel=True)
+def parallel_solve(flat_measured, a, b, c):
+    deltas = np.empty(len(flat_measured), dtype=np.float64)
+    optical_density = np.empty((len(flat_measured),3), dtype=np.float64)
+    for i in prange(len(flat_measured)):
+        rgb = flat_measured[i]
+        red,green,blue = rgb
+        delta = newton_raphson(1, rgb, a, b, c, 1e-12, np.array([0.95, 1.05]))
+        deltas[i] = delta
+        optical_density[i] = np.array([red*delta, green*delta, blue*delta])
+
+    return deltas, optical_density
 
 
 def apply_calibration(measured_dose:npt.NDArray[np.float64], 
@@ -47,22 +60,29 @@ def apply_calibration(measured_dose:npt.NDArray[np.float64],
     b = np.array([calibration_r.b, calibration_g.b, calibration_b.b])
     c = np.array([calibration_r.c, calibration_g.c, calibration_b.c])
     
-    for rgb in flat_measured:
-        red,green,blue = rgb
+    # for rgb in flat_measured:
+    #     red,green,blue = rgb
         
-        # res = minimize_scalar(objective_function, args=(np.array([r,g,b]), (calibration_r, calibration_g, calibration_b)), bounds=(0.8,1.2), tol=1e-8)
-        # delta = res.x
-        # res = shgo(objective_function, 
-        #            bounds=[(0.8, 1.2)], 
-        #            options = dict(f_tol=1e-6),
-        #            args=(np.array([r,g,b]), (calibration_r, calibration_g, calibration_b)))
-        # delta = res.x[0]
-        delta = newton_raphson(1, rgb, a, b, c, 1e-12, np.array([0.5, 1.5]))
-        deltas[i] = delta
-        Dose[i] = np.array([calibration_r(red*delta), calibration_g(green*delta), calibration_b(blue*delta)])
-        optical_density[i] = np.array([red*delta, green*delta, blue*delta])
+    #     # res = minimize_scalar(objective_function, args=(np.array([r,g,b]), (calibration_r, calibration_g, calibration_b)), bounds=(0.8,1.2), tol=1e-8)
+    #     # delta = res.x
+    #     # res = shgo(objective_function, 
+    #     #            bounds=[(0.8, 1.2)], 
+    #     #            options = dict(f_tol=1e-6),
+    #     #            args=(np.array([r,g,b]), (calibration_r, calibration_g, calibration_b)))
+    #     # delta = res.x[0]
+    #     delta = newton_raphson(1, rgb, a, b, c, 1e-12, np.array([0.95, 1.05]))
+    #     deltas[i] = delta
+    #     Dose[i] = np.array([calibration_r(red*delta), calibration_g(green*delta), calibration_b(blue*delta)])
+    #     optical_density[i] = np.array([red*delta, green*delta, blue*delta])
 
-        i += 1
+    #     i += 1
+
+    deltas, optical_density = parallel_solve(flat_measured, a, b, c)
+    for i,rgb in enumerate(flat_measured):
+        red,green,blue = rgb
+        delta = deltas[i]
+        Dose[i] = np.array([calibration_r(red*delta), calibration_g(green*delta), calibration_b(blue*delta)])
+
 
     Dose = Dose.reshape((measured_dose.shape))
     deltas = deltas.reshape(*measured_dose.shape[0:2])
