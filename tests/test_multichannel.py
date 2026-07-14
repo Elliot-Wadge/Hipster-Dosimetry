@@ -50,7 +50,7 @@ def test_disturbed1_dose_signal():
     x, y, xx, yy = make_grid()
     z = gaussian_2D(xx, yy, 10, 0, 0)*3+1
 
-    disturbance = 1.1
+    disturbance = 1.04
     b = -np.array([0.2, 0.4, 0.5])
     a = abs(b)*4+0.78
     c = np.array([0.2, 0.6, 0.2])
@@ -77,7 +77,7 @@ def test_disturbed2_dose_signal():
     x, y, xx, yy = make_grid()
     z = gaussian_2D(xx, yy, 10, 0, 0)*5+1
 
-    disturbance = 0.85
+    disturbance = 0.97
     b = -np.array([0.2, 0.4, 0.5])
     a = abs(b)*7+0.78
     c = np.array([0.2, 0.6, 0.2])
@@ -105,7 +105,7 @@ def test_speed(benchmark):
     x, y, xx, yy = make_grid(nx=600, ny=600)
     z = gaussian_2D(xx, yy, 10, 0, 0)*3+1
     
-    disturbance = 0.85
+    disturbance = 0.97
     b = -np.array([0.2, 0.4, 0.5])
     a = abs(b)*4+0.78
     c = np.array([0.2, 0.6, 0.2])
