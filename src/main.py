@@ -18,7 +18,7 @@ def apply_LA(file):
     test = np.ones(img.shape) / LA
     
     res = res.reshape((shape))
-    ski.io.imsave('LA_correct.tif', res)
+    ski.io.imsave('LA_correct.tif', res.astype(np.uint16))
 
 
 def convert_image():
@@ -52,6 +52,7 @@ def convert_image():
     fig.show()
 
     img = ski.io.imread('LA_correct.tif')
+    img = img[200:660,300:810]
     img = np.log10(65535/img)
 
 
@@ -217,14 +218,14 @@ def save_dose_to_rtdose(dose_array_cgy, filename="film_dose_rt.dcm", dpi=72):
 
 def save_dose_as_dicom():
     dose = np.genfromtxt('dose.csv', delimiter=',')
-    dose = dose[200:660,300:810]
+    # dose = dose[200:660,300:810]
     print(dose.shape)
     save_dose_to_rtdose(dose)
 
 if __name__ == '__main__':
     # combine_tif_images('scans/measurements/')
-    # convert_image()
-    # save_dose_as_dicom()
-    apply_LA('scans/measurements/combined/flattened_combined.tif')
+    convert_image()
+    save_dose_as_dicom()
+    # apply_LA('scans/measurements/combined/flattened_combined.tif')
     # apply_LA('scans/measurements/combined/6X_a_10cm_combined.tif')
     pass
