@@ -26,7 +26,7 @@ class Calibration(ABC):
 
 
 @njit(cache=True)
-def numba_forward(Dose, a:float, b:float, c:float) -> float|npt.NDArray[np.float64]:
+def numba_forward(Dose:float|npt.NDArray, a:float, b:float, c:float) -> float|npt.NDArray[np.float64]:
     return -np.log10((a+b*Dose)/(c+Dose))
 
 

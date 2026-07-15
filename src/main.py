@@ -11,13 +11,11 @@ import datetime
 def apply_LA(file):
     img = ski.io.imread(file)
 
-    shape = img.shape
+
     LA = np.genfromtxt('calibrations/LA.csv', delimiter=',')
     LA = LA.T[:, np.newaxis, :]
     res = img / LA
-    test = np.ones(img.shape) / LA
     
-    res = res.reshape((shape))
     ski.io.imsave('LA_correct.tif', res.astype(np.uint16))
 
 
@@ -55,33 +53,6 @@ def convert_image():
     img = img[200:660,300:810]
     img = np.log10(65535/img)
 
-
-    # disturbances = np.linspace(0.8,1.4,1000)
-    # scores = np.empty(disturbances.shape)
-    # dscores = np.empty(disturbances.shape)
-    # ddscores = np.empty(disturbances.shape)
-    # ODs = img[500,400]
-    # a = np.array([cal_r.a, cal_g.a, cal_b.a])
-    # b = np.array([cal_r.b, cal_g.b, cal_b.b])
-    # c = np.array([cal_r.c, cal_g.c, cal_b.c])
-    # print(cal_r.inverse(ODs[0]), cal_g.inverse(ODs[1]), cal_b.inverse(ODs[2]))
-
-    # for i,disturbed in enumerate(disturbances):
-    #     scores[i] = objective(ODs*disturbed, a, b, c)
-    #     dscores[i] = objective_derivative(disturbed, ODs, a, b, c)
-    #     ddscores[i] = objective_second_derivative(disturbed, ODs, a, b, c)
-
-    # gradient1 = np.gradient(scores, disturbances[1]-disturbances[0])
-    # gradient2 = np.gradient(dscores, disturbances[1]-disturbances[0])
-    # fig = go.Figure()
-    # fig.add_trace(go.Scatter(x=disturbances, y=scores, mode='lines', name='objective'))
-    # fig.add_trace(go.Scatter(x=disturbances, y=dscores, mode='lines', name='first'))
-    # fig.add_trace(go.Scatter(x=disturbances, y=ddscores, mode='lines', name='second'))
-    # fig.add_trace(go.Scatter(x=disturbances, y=gradient1, mode='lines', name='gradient1'))
-    # fig.add_trace(go.Scatter(x=disturbances, y=gradient2, mode='lines', name='gradient2'))
-    # fig.update_layout(yaxis_range=(-1,1))
-    # fig.show()
-    
     dose, delta, od = apply_calibration(img, cal_r, cal_g, cal_b)
     ski.io.imsave('dose.tif', dose[:,:,0].astype(np.uint16))
     np.savetxt('dose.csv', dose[:,:,0], delimiter=',')
@@ -104,6 +75,7 @@ def convert_image():
     fig.add_trace(go.Heatmap(z=od[:,:,0], name='od', colorscale='gray'))
     fig.show()
 
+# gemini
 def save_dose_to_rtdose(dose_array_cgy, filename="film_dose_rt.dcm", dpi=72):
     """
     Saves a 2D numpy array of dose (in cGy) as a standard-compliant DICOM RTDOSE file.
