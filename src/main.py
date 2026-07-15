@@ -1,5 +1,5 @@
 from HipsterDosimetry.util import combine_tif_images
-from HipsterDosimetry import RationalCalibration, apply_calibration, objective, objective_derivative, objective_second_derivative
+from HipsterDosimetry import RationalCalibration, apply_calibration, objective, objective_derivative, objective_second_derivative, apply_LA_correction
 import numpy as np
 import plotly.graph_objects as go
 import skimage as ski
@@ -196,8 +196,11 @@ def save_dose_as_dicom():
 
 if __name__ == '__main__':
     # combine_tif_images('scans/measurements/')
+    
+    correct = apply_LA_correction('scans/measurements/combined/flattened_combined.tif', 'calibrations/LA.csv')
+    ski.io.imsave('LA_correct_cal.tif', correct.astype(np.uint16))
+    correct = apply_LA_correction('scans/measurements/combined/6X_a_10cm_combined.tif', 'calibrations/LA.csv')
+    ski.io.imsave('LA_correct.tif', correct.astype(np.uint16))
     convert_image()
     save_dose_as_dicom()
-    # apply_LA('scans/measurements/combined/flattened_combined.tif')
-    # apply_LA('scans/measurements/combined/6X_a_10cm_combined.tif')
     pass

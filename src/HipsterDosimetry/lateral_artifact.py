@@ -21,7 +21,7 @@ def apply_LA_correction(target_file:str, correction_file:str) -> npt.NDArray:
         raise ValueError(f'{correction_file} does not exist')
     
     img = ski.io.imread(target_path)
-    LA = np.genfromtxt('calibrations/LA.csv', delimiter=',')
+    LA = np.genfromtxt(correction_file, delimiter=',')
     LA = LA.T[:, np.newaxis, :]
     try:
         res = img / LA
