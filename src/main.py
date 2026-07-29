@@ -7,6 +7,7 @@ import pydicom
 from pydicom.dataset import Dataset, FileMetaDataset
 from pydicom.uid import ExplicitVRLittleEndian, generate_uid
 import datetime
+from pathlib import Path
 
 def apply_LA(file):
     img = ski.io.imread(file)
@@ -19,8 +20,10 @@ def apply_LA(file):
     ski.io.imsave('LA_correct.tif', res.astype(np.uint16))
 
 
-def convert_image():
-    doses, red, green, blue = np.genfromtxt('scans/measurements/cal_LA.csv', unpack=True, delimiter=',', skip_header=1)
+def convert_image(target_file, LA_file, show_cal=True, show_res=True):
+    target_path = Path(target_file)
+    LA_path = Path(LA_file)
+    doses, red, green, blue = np.genfromtxt(LA_path, unpack=True, delimiter=',', skip_header=1)
     red = np.log10(65535/red)
     green = np.log10(65535/green)
     blue = np.log10(65535/blue)
@@ -39,17 +42,17 @@ def convert_image():
     od_curve_g = cal_g.forward(ddoses)
     od_curve_b = cal_b.forward(ddoses)
 
+    if show_cal:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=doses, y=red, name='red', mode='markers', marker_color='red'))
+        fig.add_trace(go.Scatter(x=ddoses, y=od_curve_r, name='red', mode='lines', line_color='red'))
+        fig.add_trace(go.Scatter(x=doses, y=green, name='green', mode='markers', marker_color='green'))
+        fig.add_trace(go.Scatter(x=ddoses, y=od_curve_g, name='green', mode='lines', line_color='green'))
+        fig.add_trace(go.Scatter(x=doses, y=blue, name='blue', mode='markers', marker_color='blue'))
+        fig.add_trace(go.Scatter(x=ddoses, y=od_curve_b, name='blue', mode='lines', line_color='blue'))
+        fig.show()
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=doses, y=red, name='red', mode='markers', marker_color='red'))
-    fig.add_trace(go.Scatter(x=ddoses, y=od_curve_r, name='red', mode='lines', line_color='red'))
-    fig.add_trace(go.Scatter(x=doses, y=green, name='green', mode='markers', marker_color='green'))
-    fig.add_trace(go.Scatter(x=ddoses, y=od_curve_g, name='green', mode='lines', line_color='green'))
-    fig.add_trace(go.Scatter(x=doses, y=blue, name='blue', mode='markers', marker_color='blue'))
-    fig.add_trace(go.Scatter(x=ddoses, y=od_curve_b, name='blue', mode='lines', line_color='blue'))
-    fig.show()
-
-    img = ski.io.imread('LA_correct.tif')
+    img = ski.io.imread(target_path)
     img = img[200:660,300:810]
     img = np.log10(65535/img)
 
@@ -59,21 +62,20 @@ def convert_image():
     print(dose.shape)
     print(delta.shape)
     print(od.shape)
-    fig = go.Figure()
-    fig.add_trace(go.Heatmap(z=img[:,:,0], name='dose', colorscale='gray'))
-    fig.show()
 
-    fig = go.Figure()
-    fig.add_trace(go.Heatmap(z=dose[:,:,0], name='dose', colorscale='gray'))
-    fig.show()
-
-    fig = go.Figure()
-    fig.add_trace(go.Heatmap(z=delta, name='delta', colorscale='gray'))
-    fig.show()
-
-    fig = go.Figure()
-    fig.add_trace(go.Heatmap(z=od[:,:,0], name='od', colorscale='gray'))
-    fig.show()
+    if show_res:
+        fig = go.Figure()
+        fig.add_trace(go.Heatmap(z=img[:,:,0], name='dose', colorscale='gray'))
+        fig.show()
+        fig = go.Figure()
+        fig.add_trace(go.Heatmap(z=dose[:,:,0], name='dose', colorscale='gray'))
+        fig.show()
+        fig = go.Figure()
+        fig.add_trace(go.Heatmap(z=delta, name='delta', colorscale='gray'))
+        fig.show()
+        fig = go.Figure()
+        fig.add_trace(go.Heatmap(z=od[:,:,0], name='od', colorscale='gray'))
+        fig.show()
 
 # gemini
 def save_dose_to_rtdose(dose_array_cgy, filename="film_dose_rt.dcm", dpi=72):
@@ -188,11 +190,12 @@ def save_dose_to_rtdose(dose_array_cgy, filename="film_dose_rt.dcm", dpi=72):
     ds.save_as(filename, write_like_original=False)
     print(f"Successfully wrote RTDOSE DICOM file: '{filename}' ({cols}x{rows} @ {pixel_spacing_mm:.4f}mm spacing)")
 
-def save_dose_as_dicom():
-    dose = np.genfromtxt('dose.csv', delimiter=',')
+def save_dose_as_dicom(target_file:str, save_file:str, dpi:float) -> None:
+    target_path = Path(target_file)
+    dose = np.genfromtxt(target_path, delimiter=',')
     # dose = dose[200:660,300:810]
     print(dose.shape)
-    save_dose_to_rtdose(dose)
+    save_dose_to_rtdose(dose, filename=save_file, dpi=dpi)
 
 if __name__ == '__main__':
     # combine_tif_images('scans/measurements/')
@@ -201,6 +204,6 @@ if __name__ == '__main__':
     ski.io.imsave('LA_correct_cal.tif', correct.astype(np.uint16))
     correct = apply_LA_correction('scans/measurements/combined/6X_a_10cm_combined.tif', 'calibrations/LA.csv')
     ski.io.imsave('LA_correct.tif', correct.astype(np.uint16))
-    convert_image()
-    save_dose_as_dicom()
+    convert_image('LA_correct.tif','scans/measurements/cal_LA.csv')
+    save_dose_as_dicom('dose.csv', 'film_dose_rt.dcm', 72)
     pass
