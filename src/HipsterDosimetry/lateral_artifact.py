@@ -31,6 +31,27 @@ def apply_LA_correction(target_file:str, correction_file:str) -> npt.NDArray:
     return res
 
 
-def make_LA_correction(director:str):
-    pass
+def make_LA_correction(directory:str):
+    correction_dir = Path(dir)
+    images = correction_dir.glob('*.tif')
+    # sum = np.zeros((3,876,1186))
+    for k,file in enumerate(images):
+        for i in range(3):
+            img = ski.io.imread(file)
+            if k == 0:
+                sum = np.zeros(img.shape)
+            img = img[:,:,i]
+            # img = np.log10(65535/img)
+            mask = (img < 5e4)
+
+            
+            mean = np.mean(img[mask])
+            footprint = ski.morphology.disk(30)
+            mask = ski.morphology.binary_closing(mask, footprint)
+            footprint = ski.morphology.disk(80)
+            mask = ski.morphology.binary_erosion(mask, footprint)
+
+            sum[i][mask] = img[mask] / mean
+    blurred = ski.filters.gaussian(sum, sigma=3)
+    return blurred, sum
     
