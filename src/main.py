@@ -20,10 +20,10 @@ def apply_LA(file):
     ski.io.imsave('LA_correct.tif', res.astype(np.uint16))
 
 
-def convert_image(target_file, LA_file, show_cal=True, show_res=True):
+def convert_image(target_file, cal_file, show_cal=True, show_res=True):
     target_path = Path(target_file)
-    LA_path = Path(LA_file)
-    doses, red, green, blue = np.genfromtxt(LA_path, unpack=True, delimiter=',', skip_header=1)
+    cal_path = Path(cal_file)
+    doses, red, green, blue = np.genfromtxt(cal_path, unpack=True, delimiter=',', skip_header=1)
     red = np.log10(65535/red)
     green = np.log10(65535/green)
     blue = np.log10(65535/blue)
@@ -200,9 +200,9 @@ def save_dose_as_dicom(target_file:str, save_file:str, dpi:float) -> None:
 if __name__ == '__main__':
     # combine_tif_images('scans/measurements/')
     
-    correct = apply_LA_correction('scans/measurements/combined/flattened_combined.tif', 'calibrations/LA.csv')
+    correct = apply_LA_correction('scans/measurements/combined/flattened_combined.tif', 'calibrations/LA_July29.csv')
     ski.io.imsave('LA_correct_cal.tif', correct.astype(np.uint16))
-    correct = apply_LA_correction('scans/measurements/combined/6X_a_10cm_combined.tif', 'calibrations/LA.csv')
+    correct = apply_LA_correction('scans/measurements/combined/6X_a_10cm_combined.tif', 'calibrations/LA_July29.csv')
     ski.io.imsave('LA_correct.tif', correct.astype(np.uint16))
     convert_image('LA_correct.tif','scans/measurements/cal_LA.csv')
     save_dose_as_dicom('dose.csv', 'film_dose_rt.dcm', 72)
