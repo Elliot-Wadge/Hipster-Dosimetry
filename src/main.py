@@ -57,8 +57,8 @@ def convert_image(target_file, cal_file, show_cal=True, show_res=True):
     img = np.log10(65535/img)
 
     dose, delta, od = apply_calibration(img, cal_r, cal_g, cal_b)
-    ski.io.imsave('dose.tif', dose[:,:,0].astype(np.uint16))
-    np.savetxt('dose.csv', dose[:,:,0], delimiter=',')
+    ski.io.imsave('tests/outputs/dose.tif', dose[:,:,0].astype(np.uint16))
+    np.savetxt('tests/outputs/dose.csv', dose[:,:,0], delimiter=',')
     print(dose.shape)
     print(delta.shape)
     print(od.shape)
@@ -200,10 +200,10 @@ def save_dose_as_dicom(target_file:str, save_file:str, dpi:float) -> None:
 if __name__ == '__main__':
     # combine_tif_images('scans/measurements/')
     
-    correct = apply_LA_correction('scans/measurements/combined/flattened_combined.tif', 'calibrations/LA_July29.csv')
-    ski.io.imsave('LA_correct_cal.tif', correct.astype(np.uint16))
-    correct = apply_LA_correction('scans/measurements/combined/6X_a_10cm_combined.tif', 'calibrations/LA_July29.csv')
-    ski.io.imsave('LA_correct.tif', correct.astype(np.uint16))
-    convert_image('LA_correct.tif','scans/measurements/cal_LA.csv')
-    save_dose_as_dicom('dose.csv', 'film_dose_rt.dcm', 72)
+    # correct = apply_LA_correction('scans/measurements/combined/flattened_combined.tif', 'calibrations/LA_July29.csv')
+    # ski.io.imsave('tests/outputs/LA_correct_cal.tif', correct.astype(np.uint16))
+    # correct = apply_LA_correction('scans/measurements/combined/6X_a_10cm_combined.tif', 'calibrations/LA_July29.csv')
+    # ski.io.imsave('tests/outputs/LA_correct.tif', correct.astype(np.uint16))
+    convert_image('tests/outputs/LA_correct.tif','scans/measurements/cal_LA.csv')
+    save_dose_as_dicom('tests/outputs/dose.csv', 'tests/outputs/film_dose_rt.dcm', 72)
     pass
