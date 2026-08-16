@@ -3,3 +3,4 @@ scikit-image
 scipy
 matplotlib
 pydicom
+numba
