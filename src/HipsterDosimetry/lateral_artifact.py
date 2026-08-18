@@ -2,6 +2,7 @@ from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 import skimage as ski
+import scipy
 
 def apply_LA_correction(target_file:str, correction_file:str) -> npt.NDArray:
     '''correct a scanned film for the lateral artifact, this effect is corrected before converting to OD and is done 
