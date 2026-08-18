@@ -42,10 +42,10 @@ class FilmHDToolbar(QWidget):
                 padding: 5px 10px;
                 border: 1px solid #ACACAC;
                 border-radius: 3px;
-                background-color: #F0F0F0;
+                background-color: #4a4444;
             }
             QToolButton:hover {
-                background-color: #E0E0E0;
+                background-color: #b5b5b3;
             }
             QToolButton:pressed {
                 background-color: #D0D0D0;
