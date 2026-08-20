@@ -82,7 +82,7 @@ def convert_image(target_file, cal_file, show_cal=True, show_res=True):
         fig.show()
 
     img = ski.io.imread(target_path)
-    img = img[200:660,300:810]
+    # img = img[200:660,300:810]
     img = np.log10(65535/img)
 
     dose, delta, od = apply_calibration(img, cal_r, cal_g, cal_b)
