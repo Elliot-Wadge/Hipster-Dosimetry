@@ -1,4 +1,4 @@
-from HipsterDosimetry import apply_calibration, RationalCalibration
+from HipsterDosimetry import apply_calibration, RationalCalibration, gradient_weighted_dose
 import numpy as np
 
 
@@ -125,6 +125,34 @@ def test_speed(benchmark):
     
     dose, delta, od = benchmark(run_metric)
 
+
+def test_gradient_weighted():
+    
+    b = -np.array([0.2, 0.4, 0.5])
+    a = abs(b)*4+0.78
+    c = np.array([0.2, 0.6, 0.2])
+    disturbance = 1
+    cal_1 = get_calibration(a[0],b[0],c[0])
+    cal_2 = get_calibration(a[1],b[1],c[1])
+    cal_3 = get_calibration(a[2],b[2],c[2])
+    od = 2
+
+    # just a single hard coded test for this function I couldn't think of a more general way to do this without just rewriting the derivative function
+    # check that the first derivatives are good
+    r_d = cal_1.first_derivative(od)
+    assert np.isclose(r_d, 0.8458476, atol=1e-4) 
+    g_d = cal_2.first_derivative(od)
+    assert np.isclose(g_d, 0.3588800, atol=1e-4)
+    b_d = cal_3.first_derivative(od)
+    assert np.isclose(b_d, 0.25495751, atol=1e-4)
+
+    x, y, xx, yy = make_grid(nx=100, ny=100)
+    od = gaussian_2D(xx, yy, 10, 0, 0)*3+1
+    # weighted_dose check
+    d1,d2,d3 = cal_1.first_derivative(od),cal_2.first_derivative(od),cal_3.first_derivative(od)
+    truth = (d1*cal_1(od) + d2*cal_2(od) + d3*cal_3(od))/(d1+d2+d3)
+    assert np.all(gradient_weighted_dose(od, [cal_1, cal_2, cal_3]).shape == od.shape)
+    assert np.all(np.isclose(truth, gradient_weighted_dose(od, [cal_1, cal_2, cal_3]), atol=1e-4))
 
 
 if __name__ == '__main__':
