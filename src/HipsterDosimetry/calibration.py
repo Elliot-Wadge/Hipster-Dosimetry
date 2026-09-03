@@ -20,6 +20,9 @@ class Calibration(ABC):
     def fit(self, Doses, optical_densities) -> tuple:
         pass
 
+    @abstractmethod
+    def first_derivative(self, ods) -> float|npt.NDArray[np.float64]:
+        pass
 
     def __call__(self, optical_density):
         return self.inverse(optical_density)
@@ -95,6 +98,12 @@ class RationalCalibration(Calibration):
     @staticmethod
     def _inverse(optical_density, a, b, c) -> float|npt.NDArray[np.float64]:
         return (c*10**(-optical_density)-a)/(b-10**(-optical_density))
+
+
+    def first_derivative(self, optical_density):
+        opt_d = optical_density
+        t = 10.0**(-opt_d)
+        return t*np.log(10)*(self.a-self.c*self.b)/(self.b-t)**2
 
     
     def inverse(self, optical_density:float|npt.NDArray[np.float64]) -> float|npt.NDArray[np.float64]:
