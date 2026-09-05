@@ -90,14 +90,15 @@ def apply_calibration(measured_dose:npt.NDArray[np.float64],
     return Dose, deltas, optical_density
 
 
-def gradient_weighted_dose(ods:npt.NDArray, calibrations:tuple[Calibration]):
-    derivatives = np.zeros((3,*ods.shape))
-    doses = np.zeros((3,*ods.shape))
+def gradient_weighted_dose(doses:npt.NDArray, calibrations:tuple[Calibration]):
+    derivatives = np.zeros(doses.shape)
+    
     for i,cal in enumerate(calibrations):
+        ods = cal.forward(doses[i])
         derivatives[i] = cal.first_derivative(ods)
-        doses[i] = cal.inverse(ods)
+        
 
-    norm = np.sum(derivatives, axis=0)
-    tmp = np.sum(derivatives * doses, axis=0)
+    norm = np.sum(derivatives, axis=2)
+    tmp = np.sum(derivatives * doses, axis=2)
     out = tmp/norm
     return out

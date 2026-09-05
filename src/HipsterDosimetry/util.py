@@ -1,4 +1,4 @@
-from HipsterDosimetry import RationalCalibration, apply_calibration, objective, objective_derivative, objective_second_derivative, apply_LA_correction
+from HipsterDosimetry import RationalCalibration, apply_calibration, objective, objective_derivative, objective_second_derivative, apply_LA_correction, gradient_weighted_dose
 import numpy as np
 import plotly.graph_objects as go
 import skimage as ski
@@ -49,7 +49,7 @@ def combine_tif_images(dir:str):
 
 
 
-def convert_image(target_file, cal_file, show_cal=True, show_res=True):
+def convert_image(target_file, cal_file, show_cal=True, show_res=True, channel='m'):
     target_path = Path(target_file)
     cal_path = Path(cal_file)
     doses, red, green, blue = np.genfromtxt(cal_path, unpack=True, delimiter=',', skip_header=1)
@@ -65,6 +65,10 @@ def convert_image(target_file, cal_file, show_cal=True, show_res=True):
     print(cal_g.args)
     cal_b.fit(doses, blue)
     print(cal_b.args)
+
+    convert_func_map = {'r':lambda img: cal_r.inverse(img[:,:,0]),
+                        'b':lambda img:cal_b.inverse(img[:,:,2]),
+                        'g':lambda img:cal_g.inverse(img[:,:,1])}
 
     ddoses = np.linspace(np.min(doses), np.max(doses), 200)
     od_curve_r = cal_r.forward(ddoses)
@@ -85,20 +89,26 @@ def convert_image(target_file, cal_file, show_cal=True, show_res=True):
     # img = img[200:660,300:810]
     img = np.log10(65535/img)
 
-    dose, delta, od = apply_calibration(img, cal_r, cal_g, cal_b)
+    if channel == 'm':
+        dose, delta, od = apply_calibration(img, cal_r, cal_g, cal_b)
+        print(dose.shape)
+        dose = gradient_weighted_dose(dose, (cal_r, cal_g, cal_b))
+        print(f'here {dose.shape}')
+    else:
+        dose = convert_func_map[channel](img)
+        
+        delta = np.ones_like(img)
+        od = img
     
     if show_res:
         fig = go.Figure()
         fig.add_trace(go.Heatmap(z=img[:,:,0], name='dose', colorscale='gray'))
         fig.show()
         fig = go.Figure()
-        fig.add_trace(go.Heatmap(z=dose[:,:,0], name='dose', colorscale='gray'))
+        fig.add_trace(go.Heatmap(z=dose, name='dose', colorscale='gray'))
         fig.show()
         fig = go.Figure()
         fig.add_trace(go.Heatmap(z=delta, name='delta', colorscale='gray'))
-        fig.show()
-        fig = go.Figure()
-        fig.add_trace(go.Heatmap(z=od[:,:,0], name='od', colorscale='gray'))
         fig.show()
 
 

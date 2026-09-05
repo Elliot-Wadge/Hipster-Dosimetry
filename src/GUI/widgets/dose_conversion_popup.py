@@ -3,7 +3,7 @@ import PyQt6.QtCore as qtc
 
 
 class CalPopup(qtw.QDialog):
-    inputs = qtc.pyqtSignal(str, str, bool, bool)  # Signal to emit the Cal and Image file paths    
+    inputs = qtc.pyqtSignal(str, str, str, bool, bool)  # Signal to emit the Cal and Image file paths    
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -48,12 +48,26 @@ class CalPopup(qtw.QDialog):
         sublayout2.addWidget(self.browse_Image_btn)
         layout.addLayout(sublayout2)
 
+        layout.addWidget(qtw.QLabel('Select Channels To Use For Dose Conversion'))
         sublayout3 = qtw.QHBoxLayout()
-        self.dicom_checkbox = qtw.QCheckBox("Save as DICOM")
-        sublayout3.addWidget(self.dicom_checkbox)
-        self.csv_checkbox = qtw.QCheckBox("Save as CSV")
-        sublayout3.addWidget(self.csv_checkbox)
+        self.channel_radio_group = qtw.QButtonGroup(self)
+        labels = ["Multichannel", "Red", "Green", "Blue"]
+        
+        for index, text in enumerate(labels):
+            radio_button = qtw.QRadioButton(text)
+            sublayout3.addWidget(radio_button)
+            self.channel_radio_group.addButton(radio_button, index)
+            
+        self.channel_radio_group.button(0).setChecked(True)
         layout.addLayout(sublayout3)
+
+        layout.addWidget(qtw.QLabel('Select Outputs'))
+        sublayout4 = qtw.QHBoxLayout()
+        self.dicom_checkbox = qtw.QCheckBox("Save as DICOM")
+        sublayout4.addWidget(self.dicom_checkbox)
+        self.csv_checkbox = qtw.QCheckBox("Save as CSV")
+        sublayout4.addWidget(self.csv_checkbox)
+        layout.addLayout(sublayout4)
 
         self.apply_btn = qtw.QPushButton("Apply")
         self.close_btn = qtw.QPushButton("Close")
@@ -85,4 +99,6 @@ class CalPopup(qtw.QDialog):
     def emit_inputs(self):
         Cal_file = self.Cal_input.text()
         image_file = self.Image_input.text()
-        self.inputs.emit(Cal_file, image_file, self.dicom_checkbox.isChecked(), self.csv_checkbox.isChecked())
+        channel_id = self.channel_radio_group.checkedId()
+        channel = self.channel_radio_group.button(channel_id).text()[0].lower()
+        self.inputs.emit(Cal_file, image_file, channel, self.dicom_checkbox.isChecked(), self.csv_checkbox.isChecked())

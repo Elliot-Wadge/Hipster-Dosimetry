@@ -132,18 +132,19 @@ class FilmHDToolbar(QWidget):
         Convert2Dose_popup.inputs.connect(self._handle_Convert2Dose_inputs)
         Convert2Dose_popup.show()
 
-    def _handle_Convert2Dose_inputs(self, cal_file, image_file, save_as_dicom, save_as_csv):
+    def _handle_Convert2Dose_inputs(self, cal_file, image_file, channel, save_as_dicom, save_as_csv):
+        print(channel)
         try:
-            dose, delta, od = convert_image(image_file, cal_file)
-            save_path0 = Path(image_file).parent / f"{Path(image_file).stem}_dose.tif"
-            save_path1 = Path(image_file).parent / f"{Path(image_file).stem}_delta.tif"
-            save_path2 = Path(image_file).parent / f"{Path(image_file).stem}_dose.csv"
-            ski.io.imsave(save_path0, dose[:,:,0].astype(np.float32))
+            dose, delta, od = convert_image(image_file, cal_file, channel=channel)
+            save_path0 = Path(image_file).parent / f"{Path(image_file).stem}_{channel}_dose.tif"
+            save_path1 = Path(image_file).parent / f"{Path(image_file).stem}_{channel}_delta.tif"
+            save_path2 = Path(image_file).parent / f"{Path(image_file).stem}_{channel}_dose.csv"
+            ski.io.imsave(save_path0, dose.astype(np.float32))
             ski.io.imsave(save_path1, delta.astype(np.float32))
             if save_as_csv:
-                np.savetxt(save_path2, dose[:,:,0], delimiter=',')
+                np.savetxt(save_path2, dose, delimiter=',')
             if save_as_dicom:
-                save_dose_to_rtdose(dose[:,:,0], save_path0.with_suffix('.dcm'))
+                save_dose_to_rtdose(dose, save_path0.with_suffix('.dcm'))
             QMessageBox.information(self, "Success", "Image converted to dose successfully.")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to convert image to dose: {str(e)}")

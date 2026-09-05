@@ -148,11 +148,12 @@ def test_gradient_weighted():
 
     x, y, xx, yy = make_grid(nx=100, ny=100)
     od = gaussian_2D(xx, yy, 10, 0, 0)*3+1
+    doses = np.array([cal_1(od),cal_2(od),cal_3(od)])
     # weighted_dose check
     d1,d2,d3 = cal_1.first_derivative(od),cal_2.first_derivative(od),cal_3.first_derivative(od)
     truth = (d1*cal_1(od) + d2*cal_2(od) + d3*cal_3(od))/(d1+d2+d3)
-    assert np.all(gradient_weighted_dose(od, [cal_1, cal_2, cal_3]).shape == od.shape)
-    assert np.all(np.isclose(truth, gradient_weighted_dose(od, [cal_1, cal_2, cal_3]), atol=1e-4))
+    assert np.all(gradient_weighted_dose(doses, [cal_1, cal_2, cal_3]).shape == od.shape)
+    assert np.all(np.isclose(truth, gradient_weighted_dose(doses, [cal_1, cal_2, cal_3]), atol=1e-4))
 
 
 if __name__ == '__main__':
